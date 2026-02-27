@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hapag-Lloyd Chat Channel Strategy Workshop</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --hl-orange: #FF6600;
+  --hl-navy: #1A2B3C;
+  --hl-dark: #0F1923;
+  --hl-blue: #2C5F8A;
+  --hl-teal: #0D9488;
+  --hl-light: #F8FAFB;
+  --hl-sand: #FFF7ED;
+  --hl-amber: #F59E0B;
+  --hl-red: #EF4444;
+  --hl-green: #10B981;
+  --card-shadow: 0 2px 12px rgba(26,43,60,0.08);
+  --card-hover: 0 8px 32px rgba(26,43,60,0.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--hl-light); color:var(--hl-navy); overflow-x:hidden; }
+
+/* HEADER */
+.header { background:var(--hl-navy); color:#fff; padding:20px 40px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.header h1 { font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+.header h1 span { color:var(--hl-orange); }
+.header-meta { font-family:'Space Mono',monospace; font-size:12px; opacity:0.7; }
+.header-nav { display:flex; gap:4px; }
+.header-nav a { color:#fff; text-decoration:none; font-size:12px; padding:6px 14px; border-radius:6px; transition:all 0.2s; font-weight:500; }
+.header-nav a:hover, .header-nav a.active { background:var(--hl-orange); }
+
+/* TIMELINE BAR */
+.timeline { background:#fff; border-bottom:1px solid #e5e7eb; padding:12px 40px; display:flex; gap:0; overflow-x:auto; }
+.timeline-item { flex:1; min-width:100px; text-align:center; padding:8px 6px; border-left:3px solid transparent; cursor:pointer; transition:all 0.2s; position:relative; }
+.timeline-item:hover { background:var(--hl-sand); }
+.timeline-item.active { border-left-color:var(--hl-orange); background:var(--hl-sand); }
+.timeline-item .time { font-family:'Space Mono',monospace; font-size:11px; color:var(--hl-orange); font-weight:700; }
+.timeline-item .topic { font-size:11px; font-weight:600; margin-top:2px; line-height:1.3; }
+.timeline-item .dur { font-size:9px; color:#9ca3af; margin-top:2px; }
+.timeline-item.break-item { background:#f3f4f6; opacity:0.6; }
+
+/* MAIN BOARD */
+.board { padding:30px 40px 60px; }
+.section { display:none; animation:fadeIn 0.3s ease; }
+.section.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* SECTION HEADER */
+.section-header { margin-bottom:30px; }
+.section-header .label { font-family:'Space Mono',monospace; font-size:11px; color:var(--hl-orange); text-transform:uppercase; letter-spacing:2px; margin-bottom:6px; }
+.section-header h2 { font-size:32px; font-weight:700; letter-spacing:-1px; line-height:1.2; }
+.section-header p { font-size:15px; color:#6b7280; margin-top:8px; max-width:700px; line-height:1.6; }
+
+/* CARD GRID */
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:20px; }
+.card { background:#fff; border-radius:12px; padding:24px; box-shadow:var(--card-shadow); transition:all 0.25s; border:1px solid #f0f0f0; position:relative; overflow:hidden; }
+.card:hover { box-shadow:var(--card-hover); transform:translateY(-2px); }
+.card .accent { position:absolute; top:0; left:0; width:4px; height:100%; }
+.card h3 { font-size:16px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.card h3 .icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.card p, .card li { font-size:13px; line-height:1.7; color:#4b5563; }
+.card ul { padding-left:16px; margin-top:8px; }
+.card ul li { margin-bottom:4px; }
+
+/* DIAGRAM CARDS */
+.diagram-card { background:var(--hl-navy); color:#fff; border-radius:12px; padding:28px; margin:20px 0; }
+.diagram-card h3 { color:#fff; font-size:18px; margin-bottom:16px; }
+
+/* FLOW DIAGRAM */
+.flow { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center; margin:16px 0; }
+.flow-step { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:14px 18px; text-align:center; min-width:130px; flex:1; }
+.flow-step .num { font-family:'Space Mono',monospace; font-size:20px; color:var(--hl-orange); font-weight:700; }
+.flow-step .name { font-size:13px; font-weight:600; margin-top:4px; }
+.flow-step .desc { font-size:10px; opacity:0.7; margin-top:4px; }
+.flow-arrow { font-size:20px; color:var(--hl-orange); flex-shrink:0; }
+
+/* TASK CARDS */
+.task-card { background:#fff; border-radius:10px; padding:16px 20px; margin:8px 0; display:flex; align-items:flex-start; gap:12px; border:1px solid #e5e7eb; cursor:pointer; transition:all 0.2s; }
+.task-card:hover { border-color:var(--hl-orange); }
+.task-card .checkbox { width:22px; height:22px; border:2px solid #d1d5db; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.2s; cursor:pointer; margin-top:2px; }
+.task-card .checkbox.checked { background:var(--hl-green); border-color:var(--hl-green); color:#fff; }
+.task-card .task-content h4 { font-size:14px; font-weight:600; }
+.task-card .task-content p { font-size:12px; color:#6b7280; margin-top:2px; }
+.task-card .tag { font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; display:inline-block; margin-top:6px; }
+.tag-discuss { background:#EFF6FF; color:#2563EB; }
+.tag-decide { background:#FEF3C7; color:#D97706; }
+.tag-build { background:#ECFDF5; color:#059669; }
+.tag-review { background:#FEF2F2; color:#DC2626; }
+
+/* STICKY NOTES */
+.sticky-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin:20px 0; }
+.sticky { padding:18px; border-radius:4px; box-shadow:2px 3px 8px rgba(0,0,0,0.1); font-size:13px; line-height:1.5; transform:rotate(var(--rot,0deg)); transition:transform 0.2s; min-height:120px; }
+.sticky:hover { transform:rotate(0deg) scale(1.03); z-index:2; }
+.sticky h4 { font-size:14px; font-weight:700; margin-bottom:6px; }
+.sticky-yellow { background:#FEF9C3; --rot:-1deg; }
+.sticky-blue { background:#DBEAFE; --rot:1deg; }
+.sticky-green { background:#D1FAE5; --rot:-0.5deg; }
+.sticky-pink { background:#FCE7F3; --rot:0.8deg; }
+.sticky-orange { background:#FFEDD5; --rot:-1.2deg; }
+
+/* SPRINT TIMELINE */
+.sprint-timeline { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin:20px 0; }
+.sprint-week { border-radius:10px; padding:16px; text-align:center; border:2px solid transparent; }
+.sprint-week .wk { font-family:'Space Mono',monospace; font-size:18px; font-weight:700; }
+.sprint-week .wk-label { font-size:11px; font-weight:600; margin-top:4px; }
+.sprint-week .wk-tasks { font-size:10px; color:#6b7280; margin-top:8px; text-align:left; }
+.w-plan { background:#EFF6FF; border-color:#93C5FD; }
+.w-build { background:#ECFDF5; border-color:#6EE7B7; }
+.w-test { background:#FEF3C7; border-color:#FCD34D; }
+.w-gate { background:#FEF2F2; border-color:#FCA5A5; }
+.w-deploy { background:#F3E8FF; border-color:#C4B5FD; }
+.w-hyper { background:#FFEDD5; border-color:#FDBA74; }
+
+/* SCORECARD */
+.score-table { width:100%; border-collapse:separate; border-spacing:0; margin:16px 0; }
+.score-table th { background:var(--hl-navy); color:#fff; padding:10px 14px; font-size:12px; text-align:left; }
+.score-table th:first-child { border-radius:8px 0 0 0; }
+.score-table th:last-child { border-radius:0 8px 0 0; }
+.score-table td { padding:10px 14px; font-size:13px; border-bottom:1px solid #f0f0f0; }
+.score-table tr:hover td { background:#f9fafb; }
+.score-bar { height:6px; border-radius:3px; background:#e5e7eb; overflow:hidden; }
+.score-bar-fill { height:100%; border-radius:3px; }
+
+/* RACI TABLE */
+.raci-table { width:100%; border-collapse:separate; border-spacing:0; margin:16px 0; font-size:12px; }
+.raci-table th { background:var(--hl-navy); color:#fff; padding:8px 10px; }
+.raci-table td { padding:8px 10px; text-align:center; border-bottom:1px solid #f0f0f0; }
+.raci-table td:first-child { text-align:left; font-weight:600; }
+.raci-r { color:#2563EB; font-weight:700; }
+.raci-a { color:#DC2626; font-weight:700; }
+.raci-c { color:#D97706; font-weight:600; }
+.raci-i { color:#9CA3AF; }
+
+/* CHECKLIST */
+.checklist { columns:2; gap:20px; margin:16px 0; }
+.checklist-item { break-inside:avoid; background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px 16px; margin-bottom:10px; display:flex; align-items:flex-start; gap:10px; font-size:13px; }
+.checklist-item .chk { width:18px; height:18px; border:2px solid #d1d5db; border-radius:4px; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+.checklist-item .chk.checked { background:var(--hl-green); border-color:var(--hl-green); color:#fff; font-size:11px; }
+
+/* THREE STREAMS */
+.streams { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:20px 0; }
+.stream-col { border-radius:12px; padding:20px; }
+.stream-col h4 { font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.stream-col ul { font-size:12px; padding-left:16px; }
+.stream-col ul li { margin-bottom:6px; line-height:1.5; }
+.stream-miaw { background:#EFF6FF; border:2px solid #93C5FD; }
+.stream-af { background:#ECFDF5; border:2px solid #6EE7B7; }
+.stream-agile { background:#FEF3C7; border:2px solid #FCD34D; }
+
+/* ESCALATION */
+.escalation { display:flex; gap:16px; margin:16px 0; }
+.esc-tier { flex:1; border-radius:10px; padding:18px; text-align:center; }
+.esc-tier h4 { font-size:14px; font-weight:700; margin-bottom:6px; }
+.esc-tier p { font-size:11px; line-height:1.5; }
+.esc-1 { background:#ECFDF5; border:2px solid #10B981; }
+.esc-2 { background:#FEF3C7; border:2px solid #F59E0B; }
+.esc-3 { background:#FEF2F2; border:2px solid #EF4444; }
+
+/* TIMER */
+.timer-bar { background:var(--hl-orange); color:#fff; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; border-radius:10px; margin-bottom:20px; font-family:'Space Mono',monospace; }
+.timer-bar .timer-display { font-size:28px; font-weight:700; }
+.timer-bar button { background:rgba(255,255,255,0.2); border:none; color:#fff; padding:6px 16px; border-radius:6px; cursor:pointer; font-family:'Space Mono',monospace; font-size:12px; font-weight:700; }
+.timer-bar button:hover { background:rgba(255,255,255,0.3); }
+
+/* TWO COL */
+.two-col { display:grid; grid-template-columns:2fr 1fr; gap:24px; }
+.two-col-equal { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+
+/* RESPONSIVE */
+@media(max-width:900px) {
+  .card-grid,.streams,.sprint-timeline,.two-col,.two-col-equal,.escalation,.checklist { grid-template-columns:1fr!important; display:flex!important; flex-direction:column; }
+  .flow { flex-direction:column; }
+  .flow-arrow { transform:rotate(90deg); }
+  .header { flex-direction:column; gap:10px; padding:16px 20px; }
+  .board { padding:20px; }
+  .timeline { padding:8px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>⚓ Hapag-Lloyd <span>Chat Channel Strategy</span> Workshop</h1>
+    <div class="header-meta">1:00 PM – 4:30 PM · 3.5 Hours · Interactive Workshop</div>
+  </div>
+  <nav class="header-nav" id="nav">
+    <a href="#" data-s="0" class="active">Kickoff</a>
+    <a href="#" data-s="1">CARE & Release</a>
+    <a href="#" data-s="2">Demand</a>
+    <a href="#" data-s="3">Orchestration</a>
+    <a href="#" data-s="4">Rollout</a>
+    <a href="#" data-s="5">Scorecard</a>
+    <a href="#" data-s="6">Governance</a>
+    <a href="#" data-s="7">Checklists</a>
+    <a href="#" data-s="8">Next Steps</a>
+  </nav>
+</div>
+
+<div class="timeline" id="timeline">
+  <div class="timeline-item active" data-s="0"><div class="time">1:00</div><div class="topic">Welcome & Kickoff</div><div class="dur">15 min</div></div>
+  <div class="timeline-item" data-s="1"><div class="time">1:15</div><div class="topic">Release & CARE</div><div class="dur">30 min</div></div>
+  <div class="timeline-item" data-s="2"><div class="time">1:45</div><div class="topic">Demand & Process</div><div class="dur">25 min</div></div>
+  <div class="timeline-item break-item" data-s="-1"><div class="time">2:10</div><div class="topic">☕ Break</div><div class="dur">15 min</div></div>
+  <div class="timeline-item" data-s="3"><div class="time">2:25</div><div class="topic">Orchestration</div><div class="dur">30 min</div></div>
+  <div class="timeline-item" data-s="4"><div class="time">2:55</div><div class="topic">Rollout & Scorecard</div><div class="dur">25 min</div></div>
+  <div class="timeline-item" data-s="5"><div class="time">3:20</div><div class="topic">Scorecard Build</div><div class="dur">20 min</div></div>
+  <div class="timeline-item" data-s="6"><div class="time">3:40</div><div class="topic">Governance</div><div class="dur">25 min</div></div>
+  <div class="timeline-item" data-s="7"><div class="time">4:05</div><div class="topic">Checklists</div><div class="dur">10 min</div></div>
+  <div class="timeline-item" data-s="8"><div class="time">4:15</div><div class="topic">Wrap-Up</div><div class="dur">15 min</div></div>
+</div>
+
+<div class="board">
+
+<!-- ===== SECTION 0: KICKOFF ===== -->
+<div class="section active" id="s0">
+  <div class="section-header">
+    <div class="label">1:00 PM · Plenary · 15 min</div>
+    <h2>Welcome & Kickoff</h2>
+    <p>Von „making it work" zu „making it scale" – die strategischen und operativen Grundlagen für den globalen Chat-Channel.</p>
+  </div>
+
+  <div class="timer-bar">
+    <div>⏱ Block Timer</div>
+    <div class="timer-display" id="timer">15:00</div>
+    <div><button onclick="startTimer(15)">Start</button> <button onclick="stopTimer()">Stop</button> <button onclick="resetTimer(15)">Reset</button></div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card"><div class="accent" style="background:var(--hl-orange)"></div>
+      <h3><span class="icon" style="background:#FFEDD5;color:var(--hl-orange)">🎯</span> Strategic Context</h3>
+      <p>Salesforce Messaging + Agentforce sind live in ersten Märkten. Der Fokus verschiebt sich jetzt auf <strong>skalierbare, vorhersagbare Rollouts</strong> über Dutzende Länder, Sprachen und regulatorische Umgebungen.</p>
+    </div>
+    <div class="card"><div class="accent" style="background:var(--hl-blue)"></div>
+      <h3><span class="icon" style="background:#DBEAFE;color:var(--hl-blue)">📋</span> Workshop Goals</h3>
+      <ul>
+        <li>Release Iteration Framework etablieren</li>
+        <li>Country Rollout Standards definieren</li>
+        <li>Use Case Evaluation Scorecard bauen</li>
+        <li>Governance Model mit RACI vereinbaren</li>
+        <li>Chat Modus Operandi für Dual-Product festlegen</li>
+      </ul>
+    </div>
+    <div class="card"><div class="accent" style="background:var(--hl-teal)"></div>
+      <h3><span class="icon" style="background:#D1FAE5;color:var(--hl-teal)">📊</span> Current State</h3>
+      <p>MIAW + Agentforce operativ in Pilot-Märkten. Booking Status, Documentation Support, General Service. Agent Handover funktional. Nächster Schritt: <strong>Expansion bei gleichbleibender Qualität.</strong></p>
+    </div>
+  </div>
+
+  <div style="margin-top:24px">
+    <h3 style="margin-bottom:12px">🗳 Kickoff-Aufgaben</h3>
+    <div class="task-card" onclick="toggleTask(this)"><div class="checkbox">✓</div><div class="task-content"><h4>Vorstellungsrunde abschließen</h4><p>Name, Rolle, Erwartung an den Workshop</p><span class="tag tag-discuss">Discuss</span></div></div>
+    <div class="task-card" onclick="toggleTask(this)"><div class="checkbox">✓</div><div class="task-content"><h4>Current State validieren</h4><p>Stimmt die Beschreibung? Ergänzungen?</p><span class="tag tag-decide">Decide</span></div></div>
+    <div class="task-card" onclick="toggleTask(this)"><div class="checkbox">✓</div><div class="task-content"><h4>Expected Outcomes bestätigen</h4><p>Aligned Roadmap, Frameworks, Ownership, Use Case Pipeline</p><span class="tag tag-decide">Decide</span></div></div>
+  </div>
+</div>
+
+<!-- ===== SECTION 1: CARE & RELEASE ===== -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="label">1:15 PM · Interactive · 30 min</div>
+    <h2>Release Iteration & CARE Framework</h2>
+    <p>Die drei verschachtelten Ebenen: CARE-Philosophie → Release Cycle Loop → 6-Wochen Sprint.</p>
+  </div>
+
+  <div class="timer-bar">
+    <div>⏱ Block Timer</div>
+    <div class="timer-display" id="timer1">30:00</div>
+    <div><button onclick="startTimer(30,'timer1')">Start</button> <button onclick="stopTimer()">Stop</button> <button onclick="resetTimer(30,'timer1')">Reset</button></div>
+  </div>
+
+  <div class="diagram-card">
+    <h3>🔄 CARE Framework</h3>
+    <div class="flow">
+      <div class="flow-step"><div class="num">C</div><div class="name">Conceptualize</div><div class="desc">Problem & Customer Value definieren</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">A</div><div class="name">Assemble</div><div class="desc">Foundational Components nutzen</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">R</div><div class="name">Release</div><div class="desc">Governance Guardrails einhalten</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">E</div><div class="name">Evaluate</div><div class="desc">KPIs messen → nächster Zyklus</div></div>
+    </div>
+  </div>
+
+  <div class="diagram-card" style="background:var(--hl-blue)">
+    <h3>🔁 Release Cycle Loop</h3>
+    <div class="flow">
+      <div class="flow-step"><div class="num">1</div><div class="name">Demand & Design</div><div class="desc">Business Needs → Flow Design</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">2</div><div class="name">Build & Test</div><div class="desc">DEV → UAT → Staging</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">3</div><div class="name">Rollout</div><div class="desc">Go/No-Go → Production</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">4</div><div class="name">Monitor & Improve</div><div class="desc">KPIs → Day 14 Retro</div></div>
+    </div>
+  </div>
+
+  <h3 style="margin:24px 0 12px">📅 6-Wochen Sprint Struktur</h3>
+  <div class="sprint-timeline">
+    <div class="sprint-week w-plan"><div class="wk">W1</div><div class="wk-label">Plan & Design</div><div class="wk-tasks">Sprint Planning<br>Backlog Grooming<br>Scope Finalisierung</div></div>
+    <div class="sprint-week w-build"><div class="wk">W2</div><div class="wk-label">Build</div><div class="wk-tasks">MIAW Config<br>Agentforce Flows<br>NLP Training</div></div>
+    <div class="sprint-week w-build"><div class="wk">W3</div><div class="wk-label">Build & Test</div><div class="wk-tasks">Development<br>Content Authoring<br>Localization</div></div>
+    <div class="sprint-week w-test"><div class="wk">W4</div><div class="wk-label">Test</div><div class="wk-tasks">Integration Test<br>UAT mit Country<br>Performance Test</div></div>
+    <div class="sprint-week w-gate"><div class="wk">W5</div><div class="wk-label">Gate</div><div class="wk-tasks">Bug Fixing<br>Go/No-Go Decision<br>Rollback Plan</div></div>
+    <div class="sprint-week w-deploy"><div class="wk">W6</div><div class="wk-label">Deploy & Hyper</div><div class="wk-tasks">Production Deploy<br>Hypercare 5 Tage<br>KPI Review + Retro</div></div>
+  </div>
+
+  <div class="two-col-equal" style="margin-top:20px">
+    <div class="card"><h3>🏗 Environment Strategy</h3>
+      <table style="width:100%;font-size:12px;margin-top:8px"><tr style="background:var(--hl-navy);color:#fff"><th style="padding:6px">Env</th><th>Purpose</th><th>Gate</th></tr>
+      <tr><td style="padding:6px"><strong>DEV</strong></td><td>Development, NLP Training</td><td>Code Review, Unit Tests</td></tr>
+      <tr><td style="padding:6px"><strong>Staging</strong></td><td>UAT, Integration</td><td>UAT Sign-off, Performance</td></tr>
+      <tr><td style="padding:6px"><strong>PROD</strong></td><td>Live, 24/7 Monitoring</td><td>Go/No-Go, Rollback Plan</td></tr></table>
+    </div>
+    <div class="card"><h3>🔙 Rollback Criteria</h3>
+      <ul>
+        <li>CSAT Drop > <strong>10%</strong></li>
+        <li>Error Rate > <strong>5%</strong></li>
+        <li>Agent Escalation Rate > <strong>+15%</strong></li>
+        <li>Rollback innerhalb <strong>48h</strong> ohne Change Board</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 2: DEMAND ===== -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="label">1:45 PM · Interactive · 25 min</div>
+    <h2>Demand Categorization & Process</h2>
+    <p>5 Demand-Kategorien und der 5-Phasen DEMAND-Prozess von Intake bis Plan.</p>
+  </div>
+
+  <div class="timer-bar">
+    <div>⏱ Block Timer</div>
+    <div class="timer-display" id="timer2">25:00</div>
+    <div><button onclick="startTimer(25,'timer2')">Start</button> <button onclick="stopTimer()">Stop</button> <button onclick="resetTimer(25,'timer2')">Reset</button></div>
+  </div>
+
+  <h3 style="margin-bottom:12px">📂 5 Demand-Kategorien</h3>
+  <div class="sticky-grid">
+    <div class="sticky sticky-orange"><h4>🚀 Business Innovation</h4>Neue digitale Produkte & Services.<br><em>Bsp: Proaktive Delay Notification, WhatsApp Channel</em></div>
+    <div class="sticky sticky-blue"><h4>⚙️ Technical Foundation</h4>IT-Modernisierung & Plattform-Stabilität.<br><em>Bsp: Multi-Tenant Salesforce Migration</em></div>
+    <div class="sticky sticky-pink"><h4>⚖️ Compliance & Regulatory</h4>Gesetzliche Pflichten.<br><em>Bsp: GDPR Consent Flow, PIPL China Data Residency</em></div>
+    <div class="sticky sticky-green"><h4>📈 Continuous Improvement</h4>Inkrementelle Verbesserungen.<br><em>Bsp: NLP Accuracy 92%→97%, Response Time Optimierung</em></div>
+    <div class="sticky sticky-yellow"><h4>🔧 Maintenance & Support</h4>Laufender Betrieb & Bug Fixes.<br><em>Bsp: Routing-Bug, Hotfix für Chat-Widget</em></div>
+  </div>
+
+  <div class="diagram-card" style="margin-top:24px">
+    <h3>📋 DEMAND Process – 5 Phasen</h3>
+    <div class="flow">
+      <div class="flow-step"><div class="num">1</div><div class="name">Intake</div><div class="desc">JIRA-Doku durch Idea Owner</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">2</div><div class="name">Screen</div><div class="desc">Quality Check durch Portfolio Team</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">3</div><div class="name">Refine</div><div class="desc">Architektur-Review & Epics</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">4</div><div class="name">Approve</div><div class="desc">Investment Case & HBP Approval</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="num">5</div><div class="name">Plan</div><div class="desc">Sprint-Zuweisung & Quality Gate</div></div>
+    </div>
+  </div>
+
+  <div class="two-col-equal" style="margin-top:20px">
+    <div class="card" style="border-left:4px solid var(--hl-orange)">
+      <h3>🔀 Intake Routing</h3>
+      <p style="margin-top:8px"><strong>Innovation + Foundation + Compliance:</strong><br>→ Portfolio Management Process (JIRA, Screening, HBP)</p>
+      <p style="margin-top:12px"><strong>Continuous Improvement + Maintenance:</strong><br>→ Direkt via Product Lines (reservierte Team-Kapazität)</p>
+    </div>
+    <div class="card" style="border-left:4px solid var(--hl-teal)">
+      <h3>💡 Routing-Beispiel</h3>
+      <p style="margin-top:8px"><em>„Chat in Brasilien mit Portugiesisch launchen"</em><br>→ Business Innovation → Portfolio Management<br>→ HBP Approval → Multi-Sprint Delivery</p>
+      <p style="margin-top:12px"><em>„NLP Accuracy von 92% auf 95% verbessern"</em><br>→ Continuous Improvement → Team-Backlog<br>→ Nächster Sprint</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 3: ORCHESTRATION ===== -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="label">2:25 PM · Workshop · 30 min</div>
+    <h2>Dual-Product Orchestration</h2>
+    <p>Drei parallele Streams – MIAW, Agentforce, Agile Backlog – orchestriert von 6 Leuten.</p>
+  </div>
+
+  <div class="timer-bar">
+    <div>⏱ Block Timer</div>
+    <div class="timer-display" id="timer3">30:00</div>
+    <div><button onclick="startTimer(30,'timer3')">Start</button> <button onclick="stopTimer()">Stop</button> <button onclick="resetTimer(30,'timer3')">Reset</button></div>
+  </div>
+
+  <h3 style="margin-bottom:12px">🔀 Three-Stream Delivery Model</h3>
+  <div class="streams">
+    <div class="stream-col stream-miaw">
+      <h4><span style="background:#3B82F6;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px">STREAM 1</span> MIAW</h4>
+      <ul>
+        <li>Channel Provisioning & Routing</li>
+        <li>Agent Console Configuration</li>
+        <li>SLA-Definitionen per Markt</li>
+        <li>Compliance Setup (GDPR etc.)</li>
+        <li>Staffing Models & Fallback</li>
+      </ul>
+    </div>
+    <div class="stream-col stream-af">
+      <h4><span style="background:#10B981;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px">STREAM 2</span> Agentforce</h4>
+      <ul>
+        <li>Intent Recognition & NLP Training</li>
+        <li>Conversational Flow Design</li>
+        <li>Knowledge Base Integration</li>
+        <li>Handover Logic zu Live Agents</li>
+        <li>Model Versioning & Rollback</li>
+      </ul>
+    </div>
+    <div class="stream-col stream-agile">
+      <h4><span style="background:#F59E0B;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px">STREAM 3</span> Agile Backlog</h4>
+      <ul>
+        <li>Feature Enhancements</li>
+        <li>Bug Fixes & Performance</li>
+        <li>Technical Debt Reduction</li>
+        <li>Ad-hoc Requests (15-20% Buffer)</li>
+        <li>PO-priorisiert pro Sprint</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin:24px 0 12px">🏭 Industrialization Principles</h3>
+  <div class="card-grid">
+    <div class="card"><div class="accent" style="background:var(--hl-teal)"></div><h3>♻️ Reuse over Rebuild</h3><p>Jede MIAW-Config und jeder Agentforce-Flow als <strong>wiederverwendbares Template</strong>. Markt-Anpassungen parametrisiert.</p></div>
+    <div class="card"><div class="accent" style="background:var(--hl-blue)"></div><h3>📐 80% Standard, 20% Lokal</h3><p>Core Flows global standardisiert. Nur Sprache, Ton und lokale Compliance werden pro Markt angepasst.</p></div>
+    <div class="card"><div class="accent" style="background:var(--hl-orange)"></div><h3>⚡ Automate the Checklist</h3><p>Pre-Launch Checklist progressiv automatisiert. Jeder neue Markt = weniger manueller Aufwand.</p></div>
+    <div class="card"><div class="accent" style="background:var(--hl-green)"></div><h3>📊 Measure & Iterate</h3><p>KPI-Review an Day 3, Day 7, Day 14. Learnings fließen in Templates zurück.</p></div>
+  </div>
+
+  <div style="margin-top:24px">
+    <h3 style="margin-bottom:12px">🗳 Workshop-Aufgaben</h3>
+    <div class="task-card" onclick="toggleTask(this)"><div class="checkbox">✓</div><div class="task-content"><h4>Stream Ownership bestätigen</h4><p>Wer führt welchen Stream? Dev 1 → MIAW, Dev 2 → Agentforce?</p><span class="tag tag-decide">Decide</span></div></div>
+    <div class="task-card" onclick="toggleTask(this)"><div class="checkbox">✓</div><div class="task-content"><h4>15-20% Buffer-Regel diskutieren</h4><p>Reicht das? Wie wird mit Überlauf umgegangen?</p><span class="tag tag-discuss">Discuss</span></div></div>
+    <div class="task-card" onclick="toggleTask(this)"><div class="checkbox">✓</div><div class="task-content"><h4>Joint Go/No-Go definieren</h4><p>Wer hat Stimmrecht? PO final, aber wer wird konsultiert?</p><span class="tag tag-decide">Decide</span></div></div>
+  </div>
+</div>
+
+<!-- ===== SECTION 4: ROLLOUT STANDARDS ===== -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="label">2:55 PM · Plenary · 25 min</div>
+    <h2>Country Rollout Standards</h2>
+    <p>5 Dimensionen, die jeder Markt vor Go-Live erfüllen muss.</p>
+  </div>
+
+  <div class="timer-bar">
+    <div>⏱ Block Timer</div>
+    <div class="timer-display" id="timer4">25:00</div>
+    <div><button onclick="startTimer(25,'timer4')">Start</button> <button onclick="stopTimer()">Stop</button> <button onclick="resetTimer(25,'timer4')">Reset</button></div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card"><div class="accent" style="background:#8B5CF6"></div><h3>🌍 Language & Localization</h3>
+      <ul><li>Professionelle Übersetzung + Native-Speaker Review</li><li>≥200 Utterances pro Intent in Zielsprache</li><li>Fallback-Flow für unsupported Languages</li><li>Kulturelle Ton-Guidelines (Sie vs. Du etc.)</li></ul></div>
+    <div class="card"><div class="accent" style="background:#EF4444"></div><h3>⚖️ Compliance & Privacy</h3>
+      <ul><li>GDPR (EU) / LGPD (BR) / PIPL (CN)</li><li>Consent Capture Flows validiert</li><li>Data Residency technisch umgesetzt</li><li>Legal Sign-off auf automatisierte Antworten</li></ul></div>
+    <div class="card"><div class="accent" style="background:#3B82F6"></div><h3>⚙️ Technical Readiness</h3>
+      <ul><li>SF Messaging Channel provisioniert</li><li>Agentforce ≥95% Intent Accuracy</li><li>CRM Integration verifiziert</li><li>Response Time &lt;3s, Monitoring aktiv</li></ul></div>
+    <div class="card"><div class="accent" style="background:#10B981"></div><h3>👥 Operational Readiness</h3>
+      <ul><li>Agent Team trainiert</li><li>Staffing Model validiert (2-Wochen Ramp)</li><li>SLAs agreed (&lt;60s First Response)</li><li>Knowledge Base in Zielsprache</li></ul></div>
+    <div class="card"><div class="accent" style="background:var(--hl-orange)"></div><h3>🚦 Go-Live Criteria</h3>
+      <p><strong>≥80%</strong> Readiness über alle 5 Dimensionen.<br><strong>Kein Bereich unter 60%</strong> (Hard Blocker).<br>Assessment durch Governance Board.</p></div>
+  </div>
+</div>
+
+<!-- ===== SECTION 5: SCORECARD ===== -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="label">3:20 PM · Workshop · 20 min</div>
+    <h2>Use Case Evaluation Scorecard</h2>
+    <p>6 gewichtete Kriterien zur strukturierten Priorisierung neuer Chat Use Cases.</p>
+  </div>
+
+  <div class="timer-bar">
+    <div>⏱ Block Timer</div>
+    <div class="timer-display" id="timer5">20:00</div>
+    <div><button onclick="startTimer(20,'timer5')">Start</button> <button onclick="stopTimer()">Stop</button> <button onclick="resetTimer(20,'timer5')">Reset</button></div>
+  </div>
+
+  <table class="score-table">
+    <tr><th>Kriterium</th><th>Gewicht</th><th>Beschreibung</th><th>5 = Best</th><th>1 = Worst</th></tr>
+    <tr><td><strong>Business Impact</strong></td><td>25%</td><td>Revenue, Cost Savings, Strategy</td><td>100K+/Jahr Savings</td><td>Minimal Business Value</td></tr>
+    <tr><td><strong>Customer Value</strong></td><td>20%</td><td>CX Improvement, Pain Points</td><td>Löst echten Pain Point</td><td>Nice to Have</td></tr>
+    <tr><td><strong>Tech Feasibility</strong></td><td>20%</td><td>Implementierungs-Komplexität</td><td>Standard Config</td><td>Custom Dev + 3rd Party</td></tr>
+    <tr><td><strong>Scalability</strong></td><td>15%</td><td>Über alle Märkte rollbar?</td><td>Universal anwendbar</td><td>Nur 1 Markt</td></tr>
+    <tr><td><strong>Ops Effort</strong></td><td>10%</td><td>Laufender Wartungsaufwand</td><td>Voll automatisiert</td><td>Hoher manueller Aufwand</td></tr>
+    <tr><td><strong>Time to Value</strong></td><td>10%</td><td>Speed to Production</td><td>≤2 Wochen</td><td>3+ Monate</td></tr>
+  </table>
+
+  <h3 style="margin:20px 0 12px">📊 Beispiel-Scoring</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:4px solid var(--hl-green)">
+      <h3>✅ Booking Status Inquiry</h3>
+      <p style="margin-bottom:8px"><strong>Score: 4.75 → Priority 1</strong></p>
+      <div style="font-size:12px">Biz: 4 · Cust: 5 · Tech: 5 · Scale: 5 · Ops: 5 · TTV: 5</div>
+      <div class="score-bar" style="margin-top:8px"><div class="score-bar-fill" style="width:95%;background:var(--hl-green)"></div></div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--hl-teal)">
+      <h3>✅ Proactive Delay Notification</h3>
+      <p style="margin-bottom:8px"><strong>Score: 4.35 → Priority 1</strong></p>
+      <div style="font-size:12px">Biz: 5 · Cust: 5 · Tech: 4 · Scale: 4 · Ops: 4 · TTV: 3</div>
+      <div class="score-bar" style="margin-top:8px"><div class="score-bar-fill" style="width:87%;background:var(--hl-teal)"></div></div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--hl-red)">
+      <h3>⏸ Customs Doc Upload</h3>
+      <p style="margin-bottom:8px"><strong>Score: 2.85 → Parked</strong></p>
+      <div style="font-size:12px">Biz: 3 · Cust: 4 · Tech: 2 · Scale: 3 · Ops: 2 · TTV: 2</div>
+      <div class="score-bar" style="margin-top:8px"><div class="score-bar-fill" style="width:57%;background:var(--hl-red)"></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;background:var(--hl-sand)">
+    <h3>🎯 Priority Thresholds</h3>
+    <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap">
+      <div style="padding:10px 20px;background:var(--hl-green);color:#fff;border-radius:8px;font-weight:700">≥ 4.0 → P1 Immediate</div>
+      <div style="padding:10px 20px;background:var(--hl-amber);color:#fff;border-radius:8px;font-weight:700">3.0–3.9 → P2 Next Cycle</div>
+      <div style="padding:10px 20px;background:var(--hl-red);color:#fff;border-radius:8px;font-weight:700">&lt; 3.0 → Parked</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 6: GOVERNANCE ===== -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="label">3:40 PM · Plenary · 25 min</div>
+    <h2>Governance Model</h2>
+    <p>Governance Structure, RACI-Matrix und Escalation Path.</p>
+  </div>
+
+  <div class="timer-bar">
+    <div>⏱ Block Timer</div>
+    <div class="timer-display" id="timer6">25:00</div>
+    <div><button onclick="startTimer(25,'timer6')">Start</button> <button onclick="stopTimer()">Stop</button> <button onclick="resetTimer(25,'timer6')">Reset</button></div>
+  </div>
+
+  <h3 style="margin-bottom:12px">🏛 Governance Bodies</h3>
+  <div class="card-grid">
+    <div class="card" style="border-top:4px solid var(--hl-navy)">
+      <h3>Steering Committee</h3>
+      <p><strong>Cadence:</strong> Quarterly<br><strong>Members:</strong> VP Digital, VP Ops, VP IT, Regional Heads<br><strong>Mandate:</strong> Strategic direction, Budget, Cross-functional alignment</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--hl-orange)">
+      <h3>Governance Board</h3>
+      <p><strong>Cadence:</strong> Monthly<br><strong>Members:</strong> PO, Tech Lead, UX Lead, Ops Lead, Compliance<br><strong>Mandate:</strong> Use case approval, Release sign-off, Standards enforcement</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--hl-teal)">
+      <h3>Working Team</h3>
+      <p><strong>Cadence:</strong> 6-week Sprint<br><strong>Members:</strong> Developers, Analysts, Content Authors, QA, Country Reps<br><strong>Mandate:</strong> Execution, Testing, Deployment, Incident Response</p>
+    </div>
+  </div>
+
+  <h3 style="margin:24px 0 12px">📋 RACI Matrix</h3>
+  <table class="raci-table">
+    <tr><th style="text-align:left">Activity</th><th>Product Owner</th><th>Tech Lead</th><th>Country Lead</th><th>Compliance</th><th>Portfolio</th></tr>
+    <tr><td>Use Case Scoring</td><td class="raci-a">A</td><td class="raci-c">C</td><td class="raci-r">R</td><td class="raci-c">C</td><td class="raci-i">I</td></tr>
+    <tr><td>Demand Categorization</td><td class="raci-r">R</td><td class="raci-c">C</td><td class="raci-c">C</td><td class="raci-i">I</td><td class="raci-a">A</td></tr>
+    <tr><td>Release Go/No-Go</td><td class="raci-a">A</td><td class="raci-r">R</td><td class="raci-c">C</td><td class="raci-c">C</td><td class="raci-i">I</td></tr>
+    <tr><td>Country Go-Live</td><td class="raci-a">A</td><td class="raci-c">C</td><td class="raci-r">R</td><td class="raci-r">R</td><td class="raci-i">I</td></tr>
+    <tr><td>Compliance Review</td><td class="raci-i">I</td><td class="raci-c">C</td><td class="raci-c">C</td><td class="raci-a">A</td><td class="raci-i">I</td></tr>
+    <tr><td>Content & Localization</td><td class="raci-c">C</td><td class="raci-i">I</td><td class="raci-a">A</td><td class="raci-c">C</td><td class="raci-i">I</td></tr>
+  </table>
+
+  <h3 style="margin:24px 0 12px">🚨 Escalation Path</h3>
+  <div class="escalation">
+    <div class="esc-tier esc-1"><h4>Tier 1: Working Team</h4><p>⏱ 24h<br>Ops Issues, Minor Bugs, Config Errors</p></div>
+    <div class="esc-tier esc-2"><h4>Tier 2: Governance Board</h4><p>⏱ 5 Business Days<br>Cross-functional Conflicts, Resource Disputes</p></div>
+    <div class="esc-tier esc-3"><h4>Tier 3: Steering Committee</h4><p>⏱ 10 Business Days<br>Strategic Conflicts, Budget, Market Priority</p></div>
+  </div>
+</div>
+
+<!-- ===== SECTION 7: CHECKLISTS ===== -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="label">4:05 PM · Workshop · 10 min</div>
+    <h2>Operational Checklists</h2>
+    <p>Pre-Launch, Post-Launch und Use Case Submission – die konkreten Quality Gates.</p>
+  </div>
+
+  <h3 style="margin-bottom:12px">🚀 Pre-Launch Checklist (Country Rollout)</h3>
+  <div class="checklist">
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Messaging Channel in Salesforce provisioniert</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Agentforce Bot deployed mit NLP Model</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>≥200 Utterances pro Intent trainiert</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Content professionell übersetzt + reviewed</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Kultur-/Ton-Guidelines dokumentiert</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>GDPR/LGPD/PIPL Compliance Review bestanden</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Consent Capture Flows getestet</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Data Residency Requirements umgesetzt</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>CRM Integration verifiziert</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Performance &lt;3s, Monitoring Dashboards aktiv</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>UAT signed off by Country Lead</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Agent Team trainiert (min. 2h)</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Staffing Model validiert (2-Wochen Ramp)</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Rollback Plan dokumentiert & getestet</div>
+    <div class="checklist-item" onclick="toggleChk(this)"><div class="chk">✓</div>Go/No-Go Approval durch Governance Board</div>
+  </div>
+
+  <h3 style="margin:24px 0 12px">📊 Post-Launch Checklist (14 Tage Hypercare)</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:4px solid var(--hl-red)"><h3>Day 1-3</h3><ul><li>Hypercare Team on Standby</li><li>Rollback Criteria kommuniziert</li><li>Daily Stand-up mit Country Team</li><li>Erste CSAT Review + Error Analysis</li></ul></div>
+    <div class="card" style="border-left:4px solid var(--hl-amber)"><h3>Day 7</h3><ul><li>Weekly Performance Report</li><li>Agent Feedback Session</li><li>Customer Sentiment Analysis</li><li>NLP Accuracy Spot-Check</li></ul></div>
+    <div class="card" style="border-left:4px solid var(--hl-green)"><h3>Day 14</h3><ul><li>Post-Launch Retrospective</li><li>Lessons Learned dokumentiert</li><li>Transition zu BAU Support</li><li>KPI Baselines festgelegt</li></ul></div>
+  </div>
+</div>
+
+<!-- ===== SECTION 8: NEXT STEPS ===== -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="label">4:15 PM · Plenary · 15 min</div>
+    <h2>Wrap-Up & Next Steps</h2>
+    <p>Konkrete, zeitgebundene Action Items für sofortiges Momentum.</p>
+  </div>
+
+  <div class="timer-bar">
+    <div>⏱ Block Timer</div>
+    <div class="timer-display" id="timer8">15:00</div>
+    <div><button onclick="startTimer(15,'timer8')">Start</button> <button onclick="stopTimer()">Stop</button> <button onclick="resetTimer(15,'timer8')">Reset</button></div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card" style="border-top:4px solid var(--hl-red)">
+      <h3>🔴 Woche 1 Post-Workshop</h3>
+      <ul>
+        <li>Workshop-Doku an alle Stakeholder verteilen</li>
+        <li>PO: Scorecard mit ersten 5 Use Cases zirkulieren</li>
+        <li>Tech Lead: Environment für nächsten Markt bestätigen</li>
+        <li>Compliance: Legal Review für nächsten Zielmarkt starten</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--hl-amber)">
+      <h3>🟡 Wochen 2–4</h3>
+      <ul>
+        <li>Governance Board: Erstes formelles Meeting</li>
+        <li>Working Team: Erster Sprint unter neuem Framework</li>
+        <li>Country Lead: Pre-Launch Checklist starten</li>
+        <li>Analytics: KPI Dashboard Template aufsetzen</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--hl-green)">
+      <h3>🟢 Monat 2–3</h3>
+      <ul>
+        <li>Erster Country Go-Live unter neuem Prozess</li>
+        <li>Framework-Retrospective & Anpassung</li>
+        <li>Steering Committee: Quarterly Review</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;background:var(--hl-navy);color:#fff;text-align:center;padding:32px">
+    <h3 style="color:#fff;font-size:20px">🎯 This document is the single source of truth</h3>
+    <p style="color:rgba(255,255,255,0.8);margin-top:8px;font-size:14px">für die Hapag-Lloyd Chat Channel Strategy. Alle Workshop-Entscheidungen hier dokumentiert.</p>
+  </div>
+</div>
+
+</div><!-- /board -->
+
+<script>
+// Navigation
+document.querySelectorAll('[data-s]').forEach(el => {
+  el.addEventListener('click', e => {
+    e.preventDefault();
+    const s = el.dataset.s;
+    if(s === '-1') return;
+    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+    document.querySelectorAll('[data-s]').forEach(n => n.classList.remove('active'));
+    document.getElementById('s'+s).classList.add('active');
+    document.querySelectorAll(`[data-s="${s}"]`).forEach(n => n.classList.add('active'));
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+// Task toggle
+function toggleTask(card) {
+  card.querySelector('.checkbox').classList.toggle('checked');
+}
+function toggleChk(item) {
+  item.querySelector('.chk').classList.toggle('checked');
+}
+
+// Timer
+let timerInterval;
+function startTimer(mins, id='timer') {
+  stopTimer();
+  const el = document.getElementById(id);
+  let [m,s] = el.textContent.split(':').map(Number);
+  let total = m*60+s;
+  timerInterval = setInterval(()=>{
+    total--;
+    if(total<=0){clearInterval(timerInterval);el.textContent='00:00';el.style.color='#EF4444';return;}
+    const mm=Math.floor(total/60), ss=total%60;
+    el.textContent=String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+    if(total<=60) el.style.color='#FCD34D';
+  },1000);
+}
+function stopTimer(){clearInterval(timerInterval);}
+function resetTimer(mins,id='timer'){
+  stopTimer();
+  const el=document.getElementById(id);
+  el.textContent=String(mins).padStart(2,'0')+':00';
+  el.style.color='#fff';
+}
+</script>
+</body>
+</html>
